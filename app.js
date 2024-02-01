@@ -2,15 +2,42 @@ const express = require("express");
 const app = express();
 const port = 3000;
 const qrcode = require("qrcode-terminal");
-const { Client } = require("whatsapp-web.js");
+const { Client,LocalAuth } = require("whatsapp-web.js");
 const fs = require("fs");
 
-const client = new Client();
+const SESSION_FILE_PATH = "./session.json";
 
-client.on("qr", (qr) => {
-  // Generate and scan this code with your phone
-  qrcode.generate(qr, { small: true });
-  console.log(qr);
+let sessionData;
+if (fs.existsSync(SESSION_FILE_PATH)) {
+  sessionData = require(SESSION_FILE_PATH);
+}
+
+const client = new Client({
+  authStrategy: new LocalAuth({
+    session: sessionData,
+    // Add the 'session' property with the loaded session data
+  }),
+});
+
+app.get("/qr", (req, res) => {
+  if (!client.session || !client.session.clientToken) {
+    // Generate QR code if not authenticated
+    client.on("qr", (qr) => {
+      qrcode.generate(qr, { small: true });
+      console.log(qr);
+    });
+  } else {
+    // Session is already authenticated
+    res.send("Session already authenticated.");
+  }
+});
+// Event handling
+client.on("authenticated", (session) => {
+  console.log("Authenticated");
+  sessionData = session;
+  fs.writeFile(SESSION_FILE_PATH, JSON.stringify(session), (err) => {
+    if (err) console.error(err);
+  });
 });
 
 client.on("ready", () => {
