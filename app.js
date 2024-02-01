@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const port = 3000;
 const qrcode = require("qrcode-terminal");
-const { Client,LocalAuth } = require("whatsapp-web.js");
+const { Client, LocalAuth } = require("whatsapp-web.js");
 const fs = require("fs");
 
 const SESSION_FILE_PATH = "./session.json";
@@ -18,26 +18,24 @@ const client = new Client({
     // Add the 'session' property with the loaded session data
   }),
 });
-
-app.get("/qr", (req, res) => {
-  if (!client.session || !client.session.clientToken) {
-    // Generate QR code if not authenticated
-    client.on("qr", (qr) => {
-      qrcode.generate(qr, { small: true });
-      console.log(qr);
-    });
-  } else {
-    // Session is already authenticated
-    res.send("Session already authenticated.");
-  }
+client.on("qr", (qr) => {
+  qrcode.generate(qr, { small: true });
+  console.log(qr);
 });
+
 // Event handling
 client.on("authenticated", (session) => {
   console.log("Authenticated");
-  sessionData = session;
-  fs.writeFile(SESSION_FILE_PATH, JSON.stringify(session), (err) => {
-    if (err) console.error(err);
-  });
+
+  if (session) {
+    sessionData = session;
+
+    fs.writeFile(SESSION_FILE_PATH, JSON.stringify(session), (err) => {
+      if (err) console.error(err);
+    });
+  } else {
+    console.log("Session data is undefined.");
+  }
 });
 
 client.on("ready", () => {
