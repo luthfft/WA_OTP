@@ -4,6 +4,7 @@ const port = 3000;
 const qrcode = require("qrcode-terminal");
 const { Client, LocalAuth } = require("whatsapp-web.js");
 
+const qr;
 const client = new Client({
   authStrategy: new LocalAuth(),
 });
@@ -16,6 +17,7 @@ client.initialize();
 
 client.on("qr", (qr) => {
   // QR code will be generated and displayed on the client side
+  qr=qr;
   console.log(qr);
 });
 
@@ -58,8 +60,7 @@ app.get("/", (req, res) => {
 
 app.get("/generateQR", (req, res) => {
   // Generate the QR code
-  const qrCode = qrcode.generateSync("example data"); // Replace with your actual data
-
+  const qrCode = qrcode.generateSync(qr); // Replace with your actual data
   // Send the QR code as a response
   res.send(qrCode);
 });
