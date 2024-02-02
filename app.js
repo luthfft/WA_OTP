@@ -4,7 +4,6 @@ const port = 3000;
 const qrcode = require("qrcode-terminal");
 const { Client, LocalAuth } = require("whatsapp-web.js");
 
-const qr;
 const client = new Client({
   authStrategy: new LocalAuth(),
 });
@@ -12,12 +11,11 @@ const client = new Client({
 client.on("ready", () => {
   console.log("Client is ready!");
 });
-
 client.initialize();
 
 client.on("qr", (qr) => {
-  // QR code will be generated and displayed on the client side
-  qr=qr;
+  // Generate and scan this code with your phone
+  qrcode.generate(qr, { small: true });
   console.log(qr);
 });
 
@@ -30,39 +28,7 @@ client.on("message", (msg) => {
 });
 
 app.get("/", (req, res) => {
-  res.send(`
-    <html>
-      <body>
-        <h1>Hello World!</h1>
-        <button id="generateQR">Generate QR Code</button>
-        <div id="qrCode"></div>
-        <script>
-          const generateQRButton = document.getElementById("generateQR");
-          const qrCodeContainer = document.getElementById("qrCode");
-
-          generateQRButton.addEventListener("click", () => {
-            // Make an AJAX request to trigger QR code generation
-            const xhr = new XMLHttpRequest();
-            xhr.open("GET", "/generateQR", true);
-            xhr.onreadystatechange = function () {
-              if (xhr.readyState == 4 && xhr.status == 200) {
-                // Update the qrCodeContainer with the received QR code
-                qrCodeContainer.innerHTML = `<img src="data:image/png;base64,${xhr.responseText}">`;
-              }
-            };
-            xhr.send();
-          });
-        </script>
-      </body>
-    </html>
-  `);
-});
-
-app.get("/generateQR", (req, res) => {
-  // Generate the QR code
-  const qrCode = qrcode.generateSync(qr); // Replace with your actual data
-  // Send the QR code as a response
-  res.send(qrCode);
+  res.send("Hello World!");
 });
 
 app.get("/sendto", (req, res) => {
@@ -76,7 +42,6 @@ app.get("/sendto", (req, res) => {
   res.send("Message sent!");
   res.json({ status: false });
 });
-
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
