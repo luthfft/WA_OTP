@@ -3,43 +3,21 @@ const app = express();
 const port = 3000;
 const qrcode = require("qrcode-terminal");
 const { Client, LocalAuth } = require("whatsapp-web.js");
-const fs = require("fs");
-
-const SESSION_FILE_PATH = "./session.json";
-
-let sessionData;
-if (fs.existsSync(SESSION_FILE_PATH)) {
-  sessionData = require(SESSION_FILE_PATH);
-}
 
 const client = new Client({
-  authStrategy: new LocalAuth({
-    session: sessionData,
-    // Add the 'session' property with the loaded session data
-  }),
-});
-client.on("qr", (qr) => {
-  qrcode.generate(qr, { small: true });
-  console.log(qr);
-});
-
-// Event handling
-client.on("authenticated", (session) => {
-  console.log("Authenticated");
-
-  if (session) {
-    sessionData = session;
-
-    fs.writeFile(SESSION_FILE_PATH, JSON.stringify(session), (err) => {
-      if (err) console.error(err);
-    });
-  } else {
-    console.log("Session data is undefined.");
-  }
+  authStrategy: new LocalAuth(),
 });
 
 client.on("ready", () => {
   console.log("Client is ready!");
+});
+
+client.initialize();
+
+client.on("qr", (qr) => {
+  // Generate and scan this code with your phone
+  qrcode.generate(qr, { small: true });
+  console.log(qr);
 });
 
 client.on("message", (msg) => {
@@ -50,10 +28,28 @@ client.on("message", (msg) => {
   }
 });
 
-client.initialize();
-
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+  res.send(`
+    <html>
+      <body>
+        <h1>Hello World!</h1>
+        <button id="generateQR">Generate QR Code</button>
+        <div id="qrCode"></div>
+        <script>
+          const generateQRButton = document.getElementById("generateQR");
+          const qrCodeContainer = document.getElementById("qrCode");
+
+          generateQRButton.addEventListener("click", () => {
+            // Add logic to fetch the QR code and display it in qrCodeContainer
+            // You may need to make an AJAX request to the server to trigger QR generation
+
+            // For demonstration purposes, you can manually show a sample QR code:
+            qrCodeContainer.innerHTML = '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAACQCAIAAADXkf7BAAAAmUlEQVR42u3BAQEAAAABIP6PzgpLn5AAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAA4JwPHwABF7r/AwAAAABJRU5ErkJggg==">';
+          });
+        </script>
+      </body>
+    </html>
+  `);
 });
 
 app.get("/sendto", (req, res) => {
@@ -67,6 +63,7 @@ app.get("/sendto", (req, res) => {
   res.send("Message sent!");
   res.json({ status: false });
 });
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
