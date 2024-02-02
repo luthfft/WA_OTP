@@ -15,8 +15,7 @@ client.on("ready", () => {
 client.initialize();
 
 client.on("qr", (qr) => {
-  // Generate and scan this code with your phone
-  qrcode.generate(qr, { small: true });
+  // QR code will be generated and displayed on the client side
   console.log(qr);
 });
 
@@ -40,16 +39,29 @@ app.get("/", (req, res) => {
           const qrCodeContainer = document.getElementById("qrCode");
 
           generateQRButton.addEventListener("click", () => {
-            // Add logic to fetch the QR code and display it in qrCodeContainer
-            // You may need to make an AJAX request to the server to trigger QR generation
-
-            // For demonstration purposes, you can manually show a sample QR code:
-            qrCodeContainer.innerHTML = '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAACQCAIAAADXkf7BAAAAmUlEQVR42u3BAQEAAAABIP6PzgpLn5AAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAA4JwPHwABF7r/AwAAAABJRU5ErkJggg==">';
+            // Make an AJAX request to trigger QR code generation
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", "/generateQR", true);
+            xhr.onreadystatechange = function () {
+              if (xhr.readyState == 4 && xhr.status == 200) {
+                // Update the qrCodeContainer with the received QR code
+                qrCodeContainer.innerHTML = `<img src="data:image/png;base64,${xhr.responseText}">`;
+              }
+            };
+            xhr.send();
           });
         </script>
       </body>
     </html>
   `);
+});
+
+app.get("/generateQR", (req, res) => {
+  // Generate the QR code
+  const qrCode = qrcode.generateSync("example data"); // Replace with your actual data
+
+  // Send the QR code as a response
+  res.send(qrCode);
 });
 
 app.get("/sendto", (req, res) => {
